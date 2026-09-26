@@ -72,10 +72,11 @@ export function CheckpointEditor({
   };
 
   return (
-    <section className="card stack" aria-labelledby="checkpoint-editor">
-      <h2 id="checkpoint-editor" className="eyebrow">
-        Checkpoints
-      </h2>
+    <CollapsibleCard
+      id="checkpoint-editor"
+      title={`Checkpoints bearbeiten (${checkpoints.length})`}
+      defaultOpen={false}
+    >
       <ul className="feed-list">
         {checkpoints.map((c) => (
           <li
@@ -169,7 +170,7 @@ export function CheckpointEditor({
         </button>
         {message && <span className="muted">{message}</span>}
       </div>
-    </section>
+    </CollapsibleCard>
   );
 }
 

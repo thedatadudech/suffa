@@ -102,7 +102,10 @@ describe('Interactive recordings (integration)', () => {
       })
     );
   });
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    localStorage.clear();
+  });
 
   it('pauses at a checkpoint, counts a right answer and shows the transcript', async () => {
     const router = createMemoryRouter(
@@ -112,7 +115,7 @@ describe('Interactive recordings (integration)', () => {
     render(<RouterProvider router={router} />);
     const audio = (await screen.findByLabelText('Stunde 1')) as HTMLAudioElement;
     const transcript = screen.getByRole('region', { name: 'Transkript' });
-    expect(within(transcript).getByText('كيف حالك')).toBeInTheDocument();
+    expect(within(transcript).getAllByText('كيف حالك').length).toBeGreaterThan(0);
 
     let time = 0;
     Object.defineProperty(audio, 'currentTime', {
@@ -140,10 +143,14 @@ describe('Interactive recordings (integration)', () => {
       ).toBeTruthy()
     );
     expect(screen.queryByRole('dialog')).toBeNull();
-    // The current line is marked; a tap on a line jumps there.
-    expect(within(transcript).getByText('كيف حالك').closest('li')).toHaveClass(
-      'transcript-current'
-    );
+    // Folded, the line being spoken stays in view under the player.
+    expect(transcript.querySelector('.transcript-now')).toHaveTextContent('كيف حالك');
+    // Opened: the current line is marked in the list; a tap on a line jumps there.
+    await userEvent.click(within(transcript).getByRole('button', { name: /Aufklappen/ }));
+    const line = within(transcript)
+      .getAllByText('كيف حالك')
+      .find((el) => el.closest('li'));
+    expect(line?.closest('li')).toHaveClass('transcript-current');
     await userEvent.click(within(transcript).getByText('السلام عليكم'));
     expect(time).toBe(0);
   });

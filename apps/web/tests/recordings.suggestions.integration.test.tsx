@@ -1,5 +1,5 @@
 /** AI suggestions and chapters of a recording in the app (story 11.4). */
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ChapterList } from '@/modules/classes/player/ChapterList';
@@ -59,6 +59,24 @@ function setup(states: SuggestionState[]) {
 }
 
 describe('Recording suggestions', () => {
+  afterEach(() => localStorage.clear());
+
+  it('dismisses all open suggestions at once, and folds away', async () => {
+    const { requests, onChange } = setup([READY]);
+    expect(await screen.findByText('KI-Vorschläge (3 offen)')).toBeTruthy();
+    await userEvent.click(screen.getByRole('button', { name: 'Alle verwerfen' }));
+    const puts = requests.filter((r) => r.method === 'PUT');
+    expect(puts.map((r) => r.body)).toEqual([
+      { decision: 'dismiss' },
+      { decision: 'dismiss' },
+      { decision: 'dismiss' },
+    ]);
+    expect(screen.queryByText('Kapitel: Neue Wörter: Schule')).toBeNull();
+    expect(onChange).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByRole('button', { name: /Zuklappen/ }));
+    expect(screen.getByText('Vorschläge holen')).not.toBeVisible();
+  });
+
   it('asks for suggestions, waits for them, and takes over only what the teacher accepts', async () => {
     const { requests, onChange } = setup([
       { run: null, suggestions: [] },

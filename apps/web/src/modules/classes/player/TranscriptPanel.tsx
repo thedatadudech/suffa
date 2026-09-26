@@ -1,6 +1,7 @@
 /**
- * Transcript under the player (story 8.1): the current line is marked; a tap jumps there.
- * With "Mitlaufen" on, the list scrolls along with playback (only the list, not the page).
+ * Transcript under the player (story 8.1). Folded, it shows only the line being spoken, so it
+ * stays in view while watching; opened, the whole list with the current line marked (a tap
+ * jumps there). With "Mitlaufen" on, the list scrolls along with playback.
  */
 import { useEffect, useRef, useState } from 'react';
 import { CollapsibleCard } from '@/components';
@@ -34,7 +35,22 @@ export function TranscriptPanel({
     <CollapsibleCard
       id="transcript"
       title="Transkript"
+      defaultOpen={false}
       onOpenChange={(open) => open && setShown((n) => n + 1)}
+      lead={
+        <p className="transcript-now" aria-live="off">
+          {current >= 0 ? (
+            <>
+              <span className="muted transcript-time">{clock(cues[current]!.start)}</span>
+              <span lang="ar" dir="auto" className="arabic-inline">
+                {cues[current]!.text}
+              </span>
+            </>
+          ) : (
+            <span className="muted">Startet mit dem Abspielen …</span>
+          )}
+        </p>
+      }
     >
       <label className="row muted" style={{ gap: '0.4rem', fontSize: '0.9rem' }}>
         <input

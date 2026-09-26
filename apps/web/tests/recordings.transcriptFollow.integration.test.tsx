@@ -1,5 +1,5 @@
 /** The transcript list scrolls along with playback unless the switch is off. */
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TranscriptPanel } from '@/modules/classes/player/TranscriptPanel';
@@ -11,6 +11,8 @@ const cues = Array.from({ length: 20 }, (_, i) => ({
 }));
 
 describe('transcript follow-along', () => {
+  // The card starts folded (only the current line); these tests look at the open list.
+  beforeEach(() => localStorage.setItem('suffa.card.transcript', 'open'));
   afterEach(() => localStorage.clear());
 
   it('scrolls the list to the current line, and stops when switched off', async () => {

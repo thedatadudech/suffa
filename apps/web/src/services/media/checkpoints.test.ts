@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   activeCue,
   clock,
+  cuesToVtt,
   dueCheckpoint,
   isCorrect,
   type Checkpoint,
@@ -54,5 +55,18 @@ describe('checkpoints', () => {
     expect(activeCue(cues, 20)).toBe(-1);
     expect(activeCue([], 1)).toBe(-1);
     expect(clock(75.4)).toBe('1:15');
+  });
+});
+
+describe('cuesToVtt', () => {
+  it('writes WebVTT with hour timestamps and safe text', () => {
+    expect(
+      cuesToVtt([
+        { start: 0, end: 2.5, text: 'مرحبا' },
+        { start: 3661.2, end: 3661.2, text: 'a --> b\n\nc' },
+      ])
+    ).toBe(
+      'WEBVTT\n\n00:00:00.000 --> 00:00:02.500\nمرحبا\n\n01:01:01.200 --> 01:01:09.200\na → b\nc\n'
+    );
   });
 });

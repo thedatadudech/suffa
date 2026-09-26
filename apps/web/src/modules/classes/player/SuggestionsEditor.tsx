@@ -4,7 +4,7 @@
  * without the teacher's click.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArabicText } from '@/components';
+import { ArabicText, CollapsibleCard } from '@/components';
 import { clock } from '@/services/media/checkpoints';
 import type {
   InteractiveApi,
@@ -92,14 +92,39 @@ export function SuggestionsEditor({
     if (decision === 'accept') onChange();
   };
 
+  // All at once, one after another (each is its own decision on the server).
+  const decideAll = async (decision: 'accept' | 'dismiss') => {
+    for (const s of state?.suggestions ?? []) {
+      const result = await api.decide(classId, mediaId, s.id, decision);
+      if (!result.ok) {
+        setMessage(result.message);
+        break;
+      }
+      setState((current) =>
+        current
+          ? { ...current, suggestions: current.suggestions.filter((x) => x.id !== s.id) }
+          : current
+      );
+    }
+    if (decision === 'accept') onChange();
+  };
+
   const status = state?.run?.status;
   const working = status === 'queued' || status === 'running';
   return (
-    <section className="card stack" aria-label="KI-Vorschläge">
-      <strong>KI-Vorschläge</strong>
+    <CollapsibleCard
+      id="suggestions"
+      title={
+        state?.suggestions.length
+          ? `KI-Vorschläge (${state.suggestions.length} offen)`
+          : 'KI-Vorschläge'
+      }
+    >
       <p className="muted" style={{ margin: 0 }}>
         Kapitel, Wortkarten, Fragen und Diktate aus dem Transkript. Lernende sehen nur,
-        was du übernimmst.
+        was du übernimmst: Kapitel erscheinen als Liste unter dem Video (antippen springt
+        dorthin), Fragen, Diktate und Wortkarten als Checkpoints – das Video hält an der
+        Stelle an und zeigt die Aufgabe.
       </p>
       <div className="row" style={{ gap: '0.5rem', flexWrap: 'wrap' }}>
         <button
@@ -119,6 +144,20 @@ export function SuggestionsEditor({
         )}
         {message && <span className="feedback-bad">{message}</span>}
       </div>
+      {(state?.suggestions.length ?? 0) > 1 && (
+        <div className="row" style={{ gap: '0.5rem', flexWrap: 'wrap' }}>
+          <button
+            className="btn btn-primary"
+            type="button"
+            onClick={() => void decideAll('accept')}
+          >
+            Alle übernehmen
+          </button>
+          <button className="btn" type="button" onClick={() => void decideAll('dismiss')}>
+            Alle verwerfen
+          </button>
+        </div>
+      )}
       {state?.suggestions.map((s) => (
         <div
           key={s.id}
@@ -148,6 +187,6 @@ export function SuggestionsEditor({
           </span>
         </div>
       ))}
-    </section>
+    </CollapsibleCard>
   );
 }
